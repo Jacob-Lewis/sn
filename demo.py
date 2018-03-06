@@ -11,7 +11,6 @@ def setConfig(hq):
 	nx.set_node_attributes(G, labels, 'label')
 	converted = "N"
 	nx.set_node_attributes(G, converted, 'converted')
-	print(G.nodes['4853'])
 	print(G.number_of_nodes())
 
 	df = pd.read_table("checkins_train_anon.txt", names = ["id", "time", "x", "y", "nonsense"])
@@ -29,7 +28,6 @@ def setConfig(hq):
 	labels = {}
 	time = {}
 	dfPrime = df.drop_duplicates(subset=['id'])
-	print(dfPrime.shape)
 	for index, row in dfPrime.iterrows():
 		loc = [row['x'], row['y']]
 		if (np.linalg.norm(loc-hqLoc) <= (10/55)):
@@ -37,17 +35,29 @@ def setConfig(hq):
 				G.nodes[str(row['id'])]['label'] = "A"
 			except:
 				pass
-		if index % 5000 == 0:
-			print(index)
-	print("labels: ")
 	#Can add time as another attribute if I want
-	print(G.nodes['48646']['label'])
 	return(G)
 
 def greedy(G):
 	seeds = []
 	for i in range(100):
 		best = nx.degree(G)
+		best = sorted(best, key=lambda x: x[1], reverse = True)
+		G.remove_node(best[0][0])
+		seeds.append(best[0][0])
+	return seeds
+
+def greedyAWeigthed(G):
+	seeds = []
+	for i in range(100):
+		best = nx.degree(G)
+		best = sorted(best, key=lambda x: x[1], reverse = True)
+		best = best[0:250]
+		for j in range(len(best)):
+			for node,attr in G[str(best[j][0])].items():
+				if G.nodes[node]['label'] == "A":
+					best[j] = list(best[j])
+					best[j][1] += 3.3
 		best = sorted(best, key=lambda x: x[1], reverse = True)
 		G.remove_node(best[0][0])
 		seeds.append(best[0][0])
@@ -65,9 +75,16 @@ def propogate(seeds, G):
 	return G
 
 def influence(G, seed):
-	p = .93
+#	print("influence entered for neighbors of: " + str(seed))
+	p = .3
 	for node,attr in G[seed].items():
 		effect = random.uniform(0, 1)
+		#print(effect)
+		#print("trying to effect: " + str(node))
+		#print(G.nodes[node]['converted'])
+		#if effect < p:
+			#print((G.nodes[node]['label'] == "A"))
+			#print(((G.nodes[node]['label'] == "A") or (effect > p)) and (G.nodes[node]['converted'] == "N"))
 		if ((G.nodes[node]['label'] == "A") or (effect > p)) and (G.nodes[node]['converted'] == "N"):
 			G.nodes[node]['converted'] = "Y"
 			G = influence(G, node)
@@ -77,22 +94,33 @@ def main():
 	response = input("Input city in short form:")
 	G = setConfig(response)
 	H = G.copy()
+	#seeds = greedyAWeigthed(G)
 	seeds = greedy(G)
-	results = propogate(seeds, H)
-	converted = []
-	for (p, d) in results.nodes(data=True):
-    		if d['converted'] == "Y":
-        		converted.append(p)
-	print(len(converted))
+	success = 0
+	for i in range(100):
+		J = H.copy()
+		results = propogate(seeds, J)
+		converted = []
+		for (p, d) in results.nodes(data=True):
+    			if d['converted'] == "Y":
+        			converted.append(p)
+		success += len(converted)
+		print(len(converted))
+	print(((success - (100*100))/100))
 main()
 
+
+
+
+
+
 G = nx.Graph()
-G.add_nodes_from([1,2,3,4,5,6,7,8,9,10])
+G.add_nodes_from([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
 labels = "B"
 nx.set_node_attributes(G, labels, 'label')
 converted = "N"
 nx.set_node_attributes(G, converted, 'converted')
-G.add_edges_from([(1,3),(1,4),(1,5),(1,6), (6,2),(6,3),(6,4),(6,5),(2,7),(2,8),(2,9),(2,10)])	
+G.add_edges_from([(1,3),(1,4),(1,5),(1,6), (6,2),(6,3),(6,4),(6,5),(2,7),(2,8),(2,9),(2,10),(3,11),(7,14),(15,14),(17,4),(19,17),(18,20),(20,13),(13,8)])	
 H = G.copy()
 demo = [2]
 seeds = []
@@ -105,13 +133,14 @@ best = nx.degree(G)
 best = sorted(best, key=lambda x: x[1], reverse = True)
 seeds = seeds[0:2]
 #print(seeds)
-#results = propogate(seeds, H)
+results = propogate(seeds, H)
 nodesAt5 = []
-#for (p, d) in results.nodes(data=True):
-#    if d['converted'] == "Y":
-#        nodesAt5.append(p)
+for (p, d) in results.nodes(data=True):
+	if d['converted'] == "Y":
+		nodesAt5.append(p)
 #print(nodesAt5)
 #Idea: Weight edges to nodes A higher than to nodes B	
 #Idea: If nodes are either A or converted, don't count them, otherwise, count them
 #Idea: run simulation 100 times each time
+#Fix errors?
 print("hello")
