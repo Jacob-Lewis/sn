@@ -49,7 +49,7 @@ def greedy(G):
 
 def greedyAWeigthed(G):
 	seeds = []
-	for i in range(100):
+	for i in range(10):
 		best = nx.degree(G)
 		best = sorted(best, key=lambda x: x[1], reverse = True)
 		best = best[0:250]
@@ -75,28 +75,25 @@ def propogate(seeds, G):
 	return G
 
 def influence(G, seed):
-#	print("influence entered for neighbors of: " + str(seed))
 	p = .3
 	for node,attr in G[seed].items():
 		effect = random.uniform(0, 1)
-		#print(effect)
-		#print("trying to effect: " + str(node))
-		#print(G.nodes[node]['converted'])
-		#if effect < p:
-			#print((G.nodes[node]['label'] == "A"))
-			#print(((G.nodes[node]['label'] == "A") or (effect > p)) and (G.nodes[node]['converted'] == "N"))
 		if ((G.nodes[node]['label'] == "A") or (effect > p)) and (G.nodes[node]['converted'] == "N"):
 			G.nodes[node]['converted'] = "Y"
 			G = influence(G, node)
 	return G
 
 def main():
+	print("Short forms (case sensitive) are: NY, LN, Rio")
 	response = input("Input city in short form:")
 	G = setConfig(response)
 	H = G.copy()
-	#seeds = greedyAWeigthed(G)
-	seeds = greedy(G)
+	seeds = greedyAWeigthed(G)
+	#seeds = greedy(G)
 	success = 0
+	setSeeds = set()
+	badSeeds = set()
+	badB = []
 	for i in range(100):
 		J = H.copy()
 		results = propogate(seeds, J)
@@ -104,9 +101,17 @@ def main():
 		for (p, d) in results.nodes(data=True):
     			if d['converted'] == "Y":
         			converted.append(p)
-		success += len(converted)
+		success += (len(converted) - 100)
 		print(len(converted))
-	print(((success - (100*100))/100))
+		if len(converted)>15000:
+			setSeeds.update(converted)
+		else:
+			badSeeds.update(converted)
+	for node in badSeeds:
+		if G.nodes[node]['label'] == "B":
+			badB.append(node)
+	print(setSeeds.intersection(badB))
+	print(success/100)
 main()
 
 
