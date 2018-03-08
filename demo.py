@@ -2,7 +2,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import random
-
+import sys
 
 def setConfig(hq):
 
@@ -11,7 +11,6 @@ def setConfig(hq):
 	nx.set_node_attributes(G, labels, 'label')
 	converted = "N"
 	nx.set_node_attributes(G, converted, 'converted')
-	print(G.number_of_nodes())
 
 	df = pd.read_table("checkins_train_anon.txt", names = ["id", "time", "x", "y", "nonsense"])
 	NY = np.array([40.730610, -73.935242])
@@ -49,7 +48,9 @@ def greedy(G):
 
 def greedyAWeigthed(G):
 	seeds = []
-	for i in range(10):
+	#weird = ['42015', '39034', '21095', '16151', '33538']
+	#G.remove_nodes_from(weird)
+	for i in range(100):
 		best = nx.degree(G)
 		best = sorted(best, key=lambda x: x[1], reverse = True)
 		best = best[0:250]
@@ -66,11 +67,12 @@ def greedyAWeigthed(G):
 def propogate(seeds, G):
 	errors = 0
 	for i in range(len(seeds)):
-		try:
-			G.nodes[seeds[i]]['converted'] = "Y"
-			G = influence(G,seeds[i])		
-		except:
-			errors += 1
+#		try:
+		G.nodes[seeds[i]]['converted'] = "Y"
+		G = influence(G,seeds[i])		
+#		except:
+#			print(seeds[i])			
+#			errors += 1
 	print(errors)
 	return G
 
@@ -84,6 +86,7 @@ def influence(G, seed):
 	return G
 
 def main():
+	sys.setrecursionlimit(3000)
 	print("Short forms (case sensitive) are: NY, LN, Rio")
 	response = input("Input city in short form:")
 	G = setConfig(response)
@@ -91,9 +94,11 @@ def main():
 	seeds = greedyAWeigthed(G)
 	#seeds = greedy(G)
 	success = 0
+	#This is to try and identify nodes that cause abberations
 	setSeeds = set()
 	badSeeds = set()
-	badB = []
+	bonusB = set()
+	potents = set()
 	for i in range(100):
 		J = H.copy()
 		results = propogate(seeds, J)
@@ -103,22 +108,38 @@ def main():
         			converted.append(p)
 		success += (len(converted) - 100)
 		print(len(converted))
+	print(success/100)
+
+	#Everything below this is to try and identify nodes that cause abberations
+	"""
 		if len(converted)>15000:
 			setSeeds.update(converted)
 		else:
 			badSeeds.update(converted)
-	for node in badSeeds:
-		if G.nodes[node]['label'] == "B":
-			badB.append(node)
-	print(setSeeds.intersection(badB))
-	print(success/100)
+	bonusNodes = (setSeeds - badSeeds)
+	for node in bonusNodes:
+		if H.nodes[node]['label'] == "B":
+			bonusB.add(node)
+	potents = bonusB
+	for i in range(100):
+		J = H.copy()
+		results = propogate(seeds, J)
+		converted = []
+		for (p, d) in results.nodes(data=True):
+			if d['converted'] == "Y":
+				converted.append(p)
+		if len(converted)>15000:
+			potents = potents.intersection(converted)
+		print(len(potents))
+	print(potents)
+	"""
 main()
 
 
 
 
 
-
+#For testing on small graph
 G = nx.Graph()
 G.add_nodes_from([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
 labels = "B"
