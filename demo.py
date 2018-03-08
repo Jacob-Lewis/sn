@@ -86,7 +86,9 @@ def influence(G, seed):
 	return G
 
 def main():
-	sys.setrecursionlimit(3000)
+	sys.setrecursionlimit(15000)
+	print(sys.getrecursionlimit())
+
 	print("Short forms (case sensitive) are: NY, LN, Rio")
 	response = input("Input city in short form:")
 	G = setConfig(response)
