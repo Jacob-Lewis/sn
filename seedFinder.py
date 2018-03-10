@@ -79,21 +79,28 @@ def influence(G, seed):
 
 def main():
 	sys.setrecursionlimit(15000)
-	print(sys.getrecursionlimit())
+	print("New system recursion limit: " + str(sys.getrecursionlimit()))
 
 	print("Short forms (case sensitive) are: NY, LN, Rio")
 	response = input("Input city in short form:")
+	if response == "NY":
+		fileName = "NewYork"
+	elif response == "LN":
+		fileName = "LN"
+	elif response == "Rio":
+		fileName = "Rio"
+	else: 
+		print("You did not input a valid input. Please input the city according to the directions above. Thank you.")
+		sys.exit()
+
 	G = setConfig(response)
 	H = G.copy()
 	seeds = greedyAWeigthed(G)
-	print("Seeds: " + str(seeds))
-	#seeds = greedy(G)
+	fileName = fileName + '.txt'
+	with open(fileName, 'a') as out_file:
+		for item in seeds:
+ 			 out_file.write("%s\n" % item)
 	success = 0
-	#This is to try and identify nodes that cause abberations
-	setSeeds = set()
-	badSeeds = set()
-	bonusB = set()
-	potents = set()
 	for i in range(100):
 		J = H.copy()
 		results = propogate(seeds, J)
@@ -105,29 +112,6 @@ def main():
 		print("profit in iteration " + str(i) + ": " + str(len(converted)))
 	print("average profit: " + str(success/100))
 
-	#Everything below this is to try and identify nodes that cause abberations
-	"""
-		if len(converted)>15000:
-			setSeeds.update(converted)
-		else:
-			badSeeds.update(converted)
-	bonusNodes = (setSeeds - badSeeds)
-	for node in bonusNodes:
-		if H.nodes[node]['label'] == "B":
-			bonusB.add(node)
-	potents = bonusB
-	for i in range(100):
-		J = H.copy()
-		results = propogate(seeds, J)
-		converted = []
-		for (p, d) in results.nodes(data=True):
-			if d['converted'] == "Y":
-				converted.append(p)
-		if len(converted)>15000:
-			potents = potents.intersection(converted)
-		print(len(potents))
-	print(potents)
-	"""
 main()
 
 
