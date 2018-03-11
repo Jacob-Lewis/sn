@@ -83,23 +83,30 @@ def main():
 
 	print("Short forms (case sensitive) are: NY, LN, Rio")
 	response = input("Input city in short form:")
+	
+	"""
+	#The below code is for creating the proper files
 	if response == "NY":
 		fileName = "NewYork"
 	elif response == "LN":
-		fileName = "LN"
+		fileName = "London"
 	elif response == "Rio":
 		fileName = "Rio"
 	else: 
 		print("You did not input a valid input. Please input the city according to the directions above. Thank you.")
 		sys.exit()
-
+	"""
 	G = setConfig(response)
 	H = G.copy()
 	seeds = greedyAWeigthed(G)
+	
+	"""
+	#As is this code
 	fileName = fileName + '.txt'
 	with open(fileName, 'a') as out_file:
 		for item in seeds:
  			 out_file.write("%s\n" % item)
+	"""
 	success = 0
 	for i in range(100):
 		J = H.copy()
